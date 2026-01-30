@@ -1,0 +1,43 @@
+project_id = "afcbthqpiceqaviautmq"
+
+[functions.fetch-stock-data]
+verify_jwt = false
+
+[functions.explain-stock-movement]  
+verify_jwt = false
+
+[functions.assign-user-role]
+verify_jwt = false
+
+[functions.send-invite-email]
+verify_jwt = true
+
+[functions.manage-user]
+verify_jwt = true
+
+[functions.sync-to-notion]
+verify_jwt = false
+
+[functions.ai-chat]
+verify_jwt = false
+
+[functions.ai-chat-status]
+verify_jwt = false
+
+[functions.auto-fetch-stock-data]
+verify_jwt = false
+
+[functions.fetch-weekly-stock-data]
+verify_jwt = false
+
+[functions.deal-analysis]
+verify_jwt = false
+
+[functions.test-notion]
+verify_jwt = false
+
+[functions.fetch-stock-performance]
+verify_jwt = false
+
+[functions.sync-research-sources]
+verify_jwt = false

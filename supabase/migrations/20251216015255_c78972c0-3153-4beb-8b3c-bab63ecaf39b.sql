@@ -1,0 +1,1 @@
+DELETE FROM stock_price_cache WHERE date = '2025-12-15';

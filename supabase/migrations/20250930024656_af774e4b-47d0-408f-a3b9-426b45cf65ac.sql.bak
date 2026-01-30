@@ -1,0 +1,17 @@
+-- First, unschedule any existing job with the same name
+SELECT cron.unschedule('auto-fetch-daily-stock-data');
+
+-- Schedule daily stock data fetch
+-- Runs at 9:00 PM UTC (21:00), Monday-Friday
+-- This is approximately 4:30 PM ET (after US market close)
+SELECT cron.schedule(
+  'auto-fetch-daily-stock-data',
+  '0 21 * * 1-5',
+  $$
+  SELECT
+    net.http_post(
+        url:='https://cfawoyegqqigthbtoyan.supabase.co/functions/v1/auto-fetch-stock-data',
+        headers:='{"Content-Type": "application/json", "Authorization": "Bearer sb_publishable_VnLhxTTXbFmWyYNhPf0Ceg_ONZBKr-y"}'::jsonb
+    ) as request_id;
+  $$
+);
