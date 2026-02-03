@@ -11,6 +11,7 @@ import { I18nProvider } from "@/i18n";
 // Lazy load pages for better initial load performance
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Research = lazy(() => import("./pages/Research"));
 
@@ -62,17 +63,18 @@ const AppRoutes = () => {
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/research" element={<Research />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
-      
+
       {/* Entry animation overlay - persists across route changes */}
       {showEntryAnimation && (
-      <div 
-        className="fixed inset-0 z-[100] transition-opacity duration-400"
-        style={{ opacity: animationPhase === 'fading' ? 0 : 1 }}
-      >
+        <div
+          className="fixed inset-0 z-[100] transition-opacity duration-400"
+          style={{ opacity: animationPhase === 'fading' ? 0 : 1 }}
+        >
           <EntryAnimation onComplete={handleAnimationComplete} />
         </div>
       )}

@@ -45,7 +45,7 @@ const EntryAnimation: React.FC<EntryAnimationProps> = ({ onComplete }) => {
       {/* Cinematic background effects */}
       <div className="absolute inset-0 overflow-hidden">
         {/* Subtle radial gradient */}
-        <div 
+        <div
           className="absolute inset-0 transition-opacity duration-1000"
           style={{
             background: 'radial-gradient(circle at center, hsl(var(--primary) / 0.03) 0%, transparent 70%)',
@@ -53,7 +53,7 @@ const EntryAnimation: React.FC<EntryAnimationProps> = ({ onComplete }) => {
           }}
         />
         {/* Animated light rays */}
-        <div 
+        <div
           className="absolute inset-0 transition-opacity duration-700"
           style={{
             background: 'conic-gradient(from 0deg at 50% 50%, transparent 0deg, hsl(var(--primary) / 0.02) 60deg, transparent 120deg, hsl(var(--primary) / 0.02) 180deg, transparent 240deg, hsl(var(--primary) / 0.02) 300deg, transparent 360deg)',
@@ -64,18 +64,18 @@ const EntryAnimation: React.FC<EntryAnimationProps> = ({ onComplete }) => {
       </div>
 
       {/* Logo and text container - horizontal layout matching onboarding */}
-      <div 
+      <div
         className="relative flex items-center gap-3"
         style={{
           opacity: phase === 'intro' ? 0 : 1,
           transform: phase === 'intro' ? 'scale(0.9)' : 'scale(1)',
           transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
-     >
+      >
         {/* Icon */}
         <div className="relative">
           {/* Glow behind icon */}
-          <div 
+          <div
             className="absolute inset-0 rounded-full transition-all duration-700"
             style={{
               background: 'radial-gradient(circle, hsl(var(--primary) / 0.3) 0%, transparent 70%)',
@@ -84,34 +84,34 @@ const EntryAnimation: React.FC<EntryAnimationProps> = ({ onComplete }) => {
               filter: 'blur(20px)',
             }}
           />
-          <img 
-            src="/favicon.png" 
-            alt="AI/Tech Daily" 
-            className="relative w-12 h-12"
+          <div
+            className="relative w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg"
             style={{
               filter: phase === 'glow' ? 'brightness(1.1)' : 'brightness(1)',
               transition: 'filter 0.5s ease',
             }}
-          />
+          >
+            AI
+          </div>
         </div>
 
         {/* Text - exactly matching onboarding: text-3xl, tracking-tight, font-normal, Georgia */}
-        <h1 
+        <h1
           className="text-3xl tracking-tight font-normal"
-          
-       >
-          {'AI/Tech Daily'.split('').map((letter, i) => (
+
+        >
+          {'Biomedical'.split('').map((letter, i) => (
             <span
               key={i}
               className="inline-block"
               style={{
                 opacity: phase === 'intro' ? 0 : 1,
                 transform: phase === 'intro' || (phase === 'reveal' && i > 0)
-                  ? 'translateY(15px)' 
+                  ? 'translateY(15px)'
                   : 'translateY(0)',
                 transition: `all 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${0.3 + i * 0.04}s`,
               }}
-           >
+            >
               {letter}
             </span>
           ))}

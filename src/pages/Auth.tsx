@@ -42,7 +42,7 @@ const Auth = () => {
         }
       }
     };
-    
+
     checkSession();
 
     // Listen for auth changes
@@ -127,14 +127,15 @@ const Auth = () => {
 
         // Mark as new signup before the auth call
         isNewSignupRef.current = true;
-        
+
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/`,
+            emailRedirectTo: undefined, // Disable email confirmation
             data: {
               display_name: displayName.trim(),
+              role: role, // Pass role in metadata for the trigger to pick up
             },
           },
         });
@@ -142,24 +143,33 @@ const Auth = () => {
         if (error) throw error;
 
         if (data.user) {
-          // Assign role via edge function
-          const { error: roleError } = await supabase.functions.invoke("assign-user-role", {
-            body: { userId: data.user.id, role },
-          });
-
-          if (roleError) {
-            console.error("Role assignment error:", roleError);
-            toast({
-              title: t("Error"),
-              description: t("Account created but role assignment failed"),
-              variant: "destructive",
+          // If email confirmation is disabled, user is automatically signed in
+          // If email confirmation is enabled, we need to sign in manually
+          if (!data.session) {
+            // Email confirmation is enabled, sign in manually
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+              email,
+              password,
             });
+
+            if (signInError) {
+              toast({
+                title: t("Success"),
+                description: t("Account created! Please check your email to verify."),
+              });
+            } else {
+              toast({
+                title: t("Success"),
+                description: t("Account created successfully!"),
+              });
+            }
           } else {
             toast({
               title: t("Success"),
               description: t("Account created successfully!"),
             });
           }
+          // Navigation is handled by the auth state change listener
         }
       }
     } catch (error: any) {
@@ -186,11 +196,11 @@ const Auth = () => {
   return (
     <div className="min-h-screen w-full relative overflow-hidden bg-black">
       {/* Video background - use fixed positioning and scale to ensure no white edges */}
-      <video 
-        autoPlay 
-        loop 
-        muted 
-        playsInline 
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
         className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 min-w-[100vw] min-h-[100vh] w-auto h-auto object-cover"
         style={{ transform: 'translate(-50%, -50%) scale(1.1)' }}
       >
@@ -205,9 +215,11 @@ const Auth = () => {
           <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/50 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.35)] p-8 transition-all duration-500 ease-out min-h-[420px] flex flex-col">
             <div className="text-left mb-6">
               <div className="flex items-center gap-2.5">
-                <img src="/favicon.png" alt="AI/Tech Daily Logo" className="w-8 h-8" />
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
+                  AI
+                </div>
                 <h1 className="text-2xl font-normal text-black tracking-tight font-heading">
-                  AI/Tech Daily
+                  Biomedical
                 </h1>
               </div>
               <p className="text-black/70 text-sm mt-3 tracking-wide">{t("Intuition, Amplified")}</p>
@@ -289,11 +301,10 @@ const Auth = () => {
                           <button
                             type="button"
                             onClick={() => setRole("user")}
-                            className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 ${
-                              role === "user"
-                                ? "border-primary bg-primary/10 shadow-sm"
-                                : "border-white/10 bg-background/20 hover:bg-background/30 hover:border-white/20"
-                            }`}
+                            className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 ${role === "user"
+                              ? "border-primary bg-primary/10 shadow-sm"
+                              : "border-white/10 bg-background/20 hover:bg-background/30 hover:border-white/20"
+                              }`}
                           >
                             <User className="h-5 w-5" />
                             <span className="text-sm font-medium">{t("User")}</span>
@@ -301,11 +312,10 @@ const Auth = () => {
                           <button
                             type="button"
                             onClick={() => setRole("admin")}
-                            className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 ${
-                              role === "admin"
-                                ? "border-primary bg-primary/10 shadow-sm"
-                                : "border-white/10 bg-background/20 hover:bg-background/30 hover:border-white/20"
-                            }`}
+                            className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 ${role === "admin"
+                              ? "border-primary bg-primary/10 shadow-sm"
+                              : "border-white/10 bg-background/20 hover:bg-background/30 hover:border-white/20"
+                              }`}
                           >
                             <Shield className="h-5 w-5" />
                             <span className="text-sm font-medium">{t("Admin")}</span>

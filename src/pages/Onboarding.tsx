@@ -11,7 +11,7 @@ const Onboarding = () => {
   const entryAnimation = useEntryAnimation();
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
   // Preview mode - skip auth check for testing
   const isPreview = searchParams.get('preview') === 'true';
 
@@ -24,7 +24,7 @@ const Onboarding = () => {
 
     const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         navigate('/auth');
         return;
@@ -55,7 +55,14 @@ const Onboarding = () => {
       entryAnimation?.triggerEntryAnimation();
       return;
     }
-    entryAnimation?.triggerEntryAnimation();
+
+    // Trigger entry animation first
+    if (entryAnimation) {
+      entryAnimation.triggerEntryAnimation();
+    } else {
+      // If no animation context, navigate directly
+      navigate('/');
+    }
   };
 
   if (loading) {

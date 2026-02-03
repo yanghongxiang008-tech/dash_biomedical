@@ -1,0 +1,27 @@
+/* Custom styles for React Quill in Daily Notes */
+.weekly-notes-editor-light .ql-toolbar {
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+    border-color: hsl(var(--border) / 0.6);
+    background-color: hsl(var(--muted) / 0.3);
+}
+
+.weekly-notes-editor-light .ql-container {
+    border-bottom-left-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+    border-color: hsl(var(--border) / 0.6);
+    font-family: inherit;
+    min-height: 120px;
+}
+
+.weekly-notes-editor-light .ql-editor {
+    min-height: 120px;
+    font-size: 0.875rem;
+    /* text-sm */
+    line-height: 1.6;
+}
+
+.weekly-notes-editor-light .ql-editor.ql-blank::before {
+    color: hsl(var(--muted-foreground));
+    font-style: normal;
+}

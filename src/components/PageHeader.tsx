@@ -13,16 +13,14 @@ const PageHeader = ({ pageTitle, pageSubtitle }: PageHeaderProps) => {
     <div className="fixed top-[14px] left-4 z-50 flex items-center gap-2">
       {/* AI/Tech Daily Brand with Logo */}
       <div className="flex items-center gap-1.5">
-        <img 
-          src="/favicon.png" 
-          alt="AI/Tech Daily Logo" 
-          className="w-6 h-6"
-        />
+        <div className="w-6 h-6 rounded-md bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-[10px]">
+          AI
+        </div>
         <h1 className="text-lg font-normal text-foreground tracking-tight font-heading">
-          AI/Tech Daily
+          Biomedical
         </h1>
       </div>
-      
+
       {/* Market Switcher - Hidden */}
     </div>
   );
