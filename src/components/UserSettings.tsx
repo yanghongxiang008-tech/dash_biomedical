@@ -4,17 +4,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  LineChart, 
-  Briefcase, 
-  Building2, 
-  Users, 
+import {
+  LineChart,
+  Briefcase,
+  Building2,
+  Users,
   Link2,
   Save,
   Check,
   Loader2
 } from 'lucide-react';
 import { useI18n } from '@/i18n';
+import { Switch } from '@/components/ui/switch';
+import { BookOpen } from 'lucide-react';
 
 interface UserSettingsProps {
   userId: string;
@@ -26,6 +28,9 @@ const UserSettings: React.FC<UserSettingsProps> = ({ userId }) => {
   const [displayName, setDisplayName] = useState('');
   const [identity, setIdentity] = useState<string | null>(null);
   const [notionApiKey, setNotionApiKey] = useState('');
+  const [showResearchTab, setShowResearchTab] = useState(() => {
+    return localStorage.getItem('showResearchTab') === 'true';
+  });
   const [hasChanges, setHasChanges] = useState(false);
   const { toast } = useToast();
   const { t } = useI18n();
@@ -132,11 +137,10 @@ const UserSettings: React.FC<UserSettingsProps> = ({ userId }) => {
               <button
                 key={option.id}
                 onClick={() => { setIdentity(option.id); handleChange(); }}
-                className={`flex items-center gap-2 p-3 rounded-lg border transition-all text-left ${
-                  identity === option.id
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border/50 hover:border-border hover:bg-muted/30'
-                }`}
+                className={`flex items-center gap-2 p-3 rounded-lg border transition-all text-left ${identity === option.id
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border/50 hover:border-border hover:bg-muted/30'
+                  }`}
               >
                 <Icon className={`w-4 h-4 ${identity === option.id ? 'text-primary' : 'text-muted-foreground'}`} />
                 <span className="text-sm font-medium">{option.label}</span>
@@ -166,9 +170,9 @@ const UserSettings: React.FC<UserSettingsProps> = ({ userId }) => {
           />
           <p className="text-xs text-muted-foreground">
             {t("Get your token from")}{' '}
-            <a 
-              href="https://www.notion.so/my-integrations" 
-              target="_blank" 
+            <a
+              href="https://www.notion.so/my-integrations"
+              target="_blank"
               rel="noopener noreferrer"
               className="text-primary hover:underline"
             >
@@ -178,10 +182,41 @@ const UserSettings: React.FC<UserSettingsProps> = ({ userId }) => {
         </div>
       </div>
 
+      {/* Display Settings */}
+      <div className="space-y-4 pt-4 border-t border-border">
+        <div>
+          <h3 className="text-sm font-medium mb-1 flex items-center gap-2">
+            <BookOpen className="w-4 h-4" />
+            {t("Display Settings")}
+          </h3>
+          <p className="text-xs text-muted-foreground">{t("Customize which tabs appear in navigation")}</p>
+        </div>
+        <div className="flex items-center justify-between p-4 rounded-lg border border-border/50 bg-muted/20">
+          <div className="space-y-0.5">
+            <Label htmlFor="research-toggle" className="text-sm font-medium cursor-pointer">
+              {t("Show Research Tab")}
+            </Label>
+            <p className="text-[11px] text-muted-foreground">
+              {t("Enable or disable the Research tab in the main navigation bar")}
+            </p>
+          </div>
+          <Switch
+            id="research-toggle"
+            checked={showResearchTab}
+            onCheckedChange={(checked) => {
+              setShowResearchTab(checked);
+              localStorage.setItem('showResearchTab', checked.toString());
+              // Dispatch custom event to notify Navigation component
+              window.dispatchEvent(new Event('toggle-research'));
+            }}
+          />
+        </div>
+      </div>
+
       {/* Save Button */}
       <div className="pt-4 border-t border-border">
-        <Button 
-          onClick={handleSave} 
+        <Button
+          onClick={handleSave}
           disabled={!hasChanges || saving}
           className="gap-2"
         >

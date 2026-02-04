@@ -14,11 +14,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  Plus, 
-  RotateCw, 
-  Zap, 
-  Lightbulb, 
-  Headphones, 
+  Plus,
+  RotateCw,
+  Zap,
+  Lightbulb,
+  Headphones,
   FileBarChart2,
   LayoutGrid,
   CheckCheck,
@@ -34,10 +34,27 @@ import {
   ChevronDown,
   ChevronRight,
   Star,
-  Square
+  Square,
+  User,
+  LogOut,
+  KeyRound,
+  Settings as SettingsIcon,
+  MessageCircle
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import FeedbackDialog from "@/components/FeedbackDialog";
+import { useToast } from "@/hooks/use-toast";
 
 import PageHeader from '@/components/PageHeader';
 import Navigation from '@/components/Navigation';
@@ -144,12 +161,21 @@ const Research = () => {
   const [summaryStage, setSummaryStage] = useState<'idle' | 'preparing' | 'streaming' | 'saving'>('idle');
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
+  const [checkingRole, setCheckingRole] = useState(true);
+  const [changePasswordDialog, setChangePasswordDialog] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [feedbackDialog, setFeedbackDialog] = useState(false);
+  const { toast } = useToast();
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     title: string;
     description: string;
     onConfirm: () => void;
-  }>({ open: false, title: '', description: '', onConfirm: () => {} });
+  }>({ open: false, title: '', description: '', onConfirm: () => { } });
   const categoryConfig = useMemo<Record<string, { label: string; icon: React.ReactNode; bg?: string; color?: string }>>(
     () => ({
       all: { label: t('All'), icon: <LayoutGrid className="h-4 w-4" /> },
@@ -208,6 +234,87 @@ const Research = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  // Check admin role and user email
+  useEffect(() => {
+    const checkUserRole = async () => {
+      setCheckingRole(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.email) {
+          setUserEmail(user.email);
+          const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', user.id)
+            .eq('role', 'admin')
+            .single();
+          setIsAdmin(!!roleData);
+        }
+      } catch (error) {
+        console.error('Error checking user role:', error);
+      } finally {
+        setCheckingRole(false);
+      }
+    };
+    checkUserRole();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      navigate('/auth');
+    } catch (error) {
+      console.error('Error logging out:', error);
+      toast({
+        title: t("Error"),
+        description: t("Failed to logout"),
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!newPassword || !confirmNewPassword) {
+      toast({
+        title: t("Error"),
+        description: t("Please fill in all password fields"),
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      toast({
+        title: t("Error"),
+        description: t("Passwords do not match"),
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      toast({
+        title: t("Success"),
+        description: t("Password updated successfully"),
+      });
+      setChangePasswordDialog(false);
+      setNewPassword('');
+      setConfirmNewPassword('');
+    } catch (error: any) {
+      toast({
+        title: t("Error"),
+        description: error.message || t("Failed to update password"),
+        variant: "destructive"
+      });
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
   const handleTabChange = (tab: 'ai' | 'home' | 'weekly' | 'chat' | 'admin') => {
     navigate('/', { state: { activeTab: tab } });
   };
@@ -249,7 +356,7 @@ const Research = () => {
   // Filter sources by category, priority, tag, and search, then sort by priority (desc) then name (asc)
   const filteredSources = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
-    
+
     return sources
       .filter(s => {
         const matchesCategory = selectedCategory === 'all' || s.category === selectedCategory;
@@ -257,7 +364,7 @@ const Research = () => {
         const matchesTag = selectedTag === 'all' || (s.tags && s.tags.includes(selectedTag));
         const matchesUnread = !showUnreadOnly || (s.unread_count || 0) > 0;
         // Search across all source properties
-        const matchesSearch = query === '' || 
+        const matchesSearch = query === '' ||
           s.name.toLowerCase().includes(query) ||
           (s.tags && s.tags.some(t => t.toLowerCase().includes(query))) ||
           (s.description && s.description.toLowerCase().includes(query)) ||
@@ -283,7 +390,7 @@ const Research = () => {
   const filteredItems = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
     if (query === '' || query.length < 2) return [];
-    
+
     return allItems
       .filter(item => {
         // Also filter by category if not 'all'
@@ -291,7 +398,7 @@ const Research = () => {
           const source = sources.find(s => s.id === item.source_id);
           if (!source || source.category !== selectedCategory) return false;
         }
-        
+
         return (
           item.title.toLowerCase().includes(query) ||
           (item.summary && item.summary.toLowerCase().includes(query)) ||
@@ -561,7 +668,7 @@ const Research = () => {
         onClick={() => handleSourceBadgeClick(displayName, url)}
         className="inline-flex items-center gap-1 rounded-md bg-muted/40 px-1.5 py-0.5 align-middle hover:bg-muted/60 transition-colors"
         title={displayName}
-     >
+      >
         {source ? (
           <SourceLogo source={source} size="xs" />
         ) : (
@@ -826,8 +933,67 @@ const Research = () => {
   return (
     <div className="min-h-screen bg-background">
       <PageHeader />
-      
-      <Navigation activeTab="home" onTabChange={handleTabChange} />
+
+      <Navigation activeTab="research" onTabChange={handleTabChange} isAdmin={isAdmin} />
+
+      {/* User Menu */}
+      <div className="fixed top-[18px] right-4 z-[60]">
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 hover:bg-accent ring-0 focus-visible:ring-0">
+              <Avatar className="h-10 w-10">
+                <AvatarFallback className="bg-primary text-primary-foreground">
+                  {userEmail ? userEmail[0].toUpperCase() : <User className="h-5 w-5" />}
+                </AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 z-[60]" sideOffset={8}>
+            <div className="flex flex-col space-y-1 p-2">
+              <p className="text-sm font-medium">{userEmail || t('User')}</p>
+              {isAdmin && (
+                <p className="text-xs text-muted-foreground bg-primary/10 px-2 py-0.5 rounded w-fit">
+                  {t('Admin')}
+                </p>
+              )}
+            </div>
+            <DropdownMenuSeparator />
+            {isAdmin && (
+              <DropdownMenuItem onClick={() => navigate('/', { state: { activeTab: 'admin' } })}>
+                <SettingsIcon className="mr-2 h-4 w-4" />
+                <span>{t('User Management')}</span>
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem onClick={() => setChangePasswordDialog(true)}>
+              <KeyRound className="mr-2 h-4 w-4" />
+              <span>{t('Change Password')}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/settings')}>
+              <SettingsIcon className="mr-2 h-4 w-4" />
+              <span>{t('Settings')}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>{t('Logout')}</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {!isAdmin && (
+        <div className="fixed top-4 right-16 z-[60]">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setFeedbackDialog(true)}
+            className="h-10 px-3 gap-2 rounded-full hover:bg-accent"
+            title={t("Send Feedback")}
+          >
+            <MessageCircle className="h-4 w-4" />
+            <span className="text-xs">{t("Feedback")}</span>
+          </Button>
+        </div>
+      )}
 
       <PageLayout
         maxWidth="full"
@@ -846,89 +1012,89 @@ const Research = () => {
                   variant={isSummaryView ? "default" : "outline"}
                   size="sm"
                   onClick={handleToggleSummaryView}
-                className={cn(
-                  "text-xs hover:shadow-sm transition-all duration-200 ease-out border-0 text-foreground",
-                  isSummaryView
-                    ? "bg-foreground text-background hover:bg-foreground/90"
-                    : "bg-transparent bg-gradient-to-r from-amber-200/70 via-fuchsia-200/60 to-sky-200/70 hover:from-amber-200/80 hover:via-fuchsia-200/70 hover:to-sky-200/80 opacity-85"
-                )}
-              >
-                {isSummaryView ? (
-                  <ArrowLeft className="h-3 w-3 mr-1" />
-                ) : (
-                  <Sparkles className="h-3 w-3 mr-1" />
-                )}
-                {isSummaryView ? t('Back') : t('Summary')}
-              </Button>
-              <div className={cn("flex flex-wrap items-center gap-2 sm:gap-3", isSummaryView && "invisible pointer-events-none")}>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => markAllSourcesAsRead()}
-                  disabled={totalUnread === 0}
-                  className="text-xs hover:shadow-sm transition-all duration-200 ease-out disabled:opacity-40 disabled:cursor-not-allowed"
+                  className={cn(
+                    "text-xs hover:shadow-sm transition-all duration-200 ease-out border-0 text-foreground",
+                    isSummaryView
+                      ? "bg-foreground text-background hover:bg-foreground/90"
+                      : "bg-transparent bg-gradient-to-r from-amber-200/70 via-fuchsia-200/60 to-sky-200/70 hover:from-amber-200/80 hover:via-fuchsia-200/70 hover:to-sky-200/80 opacity-85"
+                  )}
                 >
-                  <CheckCheck className="h-3 w-3 mr-1" />
-                  {t('Read All')}
+                  {isSummaryView ? (
+                    <ArrowLeft className="h-3 w-3 mr-1" />
+                  ) : (
+                    <Sparkles className="h-3 w-3 mr-1" />
+                  )}
+                  {isSummaryView ? t('Back') : t('Summary')}
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setConfirmDialog({
-                    open: true,
-                    title: t('Clear All Records'),
-                    description: t('This will delete all articles from all sources. The sources themselves will be kept. This action cannot be undone.'),
-                    onConfirm: () => clearAllSourcesItems()
-                  })}
-                  className="text-xs hover:shadow-sm transition-all duration-200 ease-out text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="h-3 w-3 mr-1" />
-                  {t('Clear All')}
-                </Button>
-                {syncProgress ? (
+                <div className={cn("flex flex-wrap items-center gap-2 sm:gap-3", isSummaryView && "invisible pointer-events-none")}>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={stopSyncAll}
-                    className={cn(
-                      "text-xs hover:shadow-sm transition-all duration-200 ease-out",
-                      syncProgress.isStopping && "opacity-60 cursor-not-allowed"
-                    )}
-                    disabled={syncProgress.isStopping}
+                    onClick={() => markAllSourcesAsRead()}
+                    disabled={totalUnread === 0}
+                    className="text-xs hover:shadow-sm transition-all duration-200 ease-out disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    <Square className="h-3 w-3 mr-1" />
-                    {syncProgress.isStopping ? t('Stopping...') : t('Stop')}
+                    <CheckCheck className="h-3 w-3 mr-1" />
+                    {t('Read All')}
                   </Button>
-                ) : isSyncing ? (
-                  <span
-                    className="text-xs font-medium animate-text-shimmer bg-clip-text text-transparent px-3 py-1.5"
-                    style={{
-                      backgroundImage: 'linear-gradient(90deg, hsl(var(--muted-foreground)) 0%, hsl(var(--primary)) 50%, hsl(var(--muted-foreground)) 100%)',
-                      backgroundSize: '200% auto'
-                    }}
-                  >
-                    {t('Working...')}
-                  </span>
-                ) : (
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => syncAllSources()}
-                    className="text-xs hover:shadow-sm transition-all duration-200 ease-out"
+                    onClick={() => setConfirmDialog({
+                      open: true,
+                      title: t('Clear All Records'),
+                      description: t('This will delete all articles from all sources. The sources themselves will be kept. This action cannot be undone.'),
+                      onConfirm: () => clearAllSourcesItems()
+                    })}
+                    className="text-xs hover:shadow-sm transition-all duration-200 ease-out text-destructive hover:text-destructive"
                   >
-                    <RotateCw className="h-3 w-3 mr-1" />
-                    {t('Sync All')}
+                    <Trash2 className="h-3 w-3 mr-1" />
+                    {t('Clear All')}
                   </Button>
-                )}
-                <Button
-                  size="sm"
-                  onClick={() => setAddDialogOpen(true)}
-                  className="bg-primary hover:bg-primary/90 text-xs hover:shadow-sm transition-all duration-200 ease-out"
-                >
-                  <Plus className="h-3 w-3 mr-1" />
-                  {t('Add Source')}
-                </Button>
-              </div>
+                  {syncProgress ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={stopSyncAll}
+                      className={cn(
+                        "text-xs hover:shadow-sm transition-all duration-200 ease-out",
+                        syncProgress.isStopping && "opacity-60 cursor-not-allowed"
+                      )}
+                      disabled={syncProgress.isStopping}
+                    >
+                      <Square className="h-3 w-3 mr-1" />
+                      {syncProgress.isStopping ? t('Stopping...') : t('Stop')}
+                    </Button>
+                  ) : isSyncing ? (
+                    <span
+                      className="text-xs font-medium animate-text-shimmer bg-clip-text text-transparent px-3 py-1.5"
+                      style={{
+                        backgroundImage: 'linear-gradient(90deg, hsl(var(--muted-foreground)) 0%, hsl(var(--primary)) 50%, hsl(var(--muted-foreground)) 100%)',
+                        backgroundSize: '200% auto'
+                      }}
+                    >
+                      {t('Working...')}
+                    </span>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => syncAllSources()}
+                      className="text-xs hover:shadow-sm transition-all duration-200 ease-out"
+                    >
+                      <RotateCw className="h-3 w-3 mr-1" />
+                      {t('Sync All')}
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    onClick={() => setAddDialogOpen(true)}
+                    className="bg-primary hover:bg-primary/90 text-xs hover:shadow-sm transition-all duration-200 ease-out"
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    {t('Add Source')}
+                  </Button>
+                </div>
               </>
             )}
           />
@@ -961,11 +1127,11 @@ const Research = () => {
                             }}
                             className={cn(
                               "w-full text-left px-4 py-3 transition-colors",
-                              selectedHistoryId === summary.id 
-                                ? "bg-muted/40" 
+                              selectedHistoryId === summary.id
+                                ? "bg-muted/40"
                                 : "hover:bg-muted/30"
                             )}
-                         >
+                          >
                             <div className="flex items-center justify-between gap-2">
                               <p className="text-[11px] font-medium text-foreground/90">
                                 {formattedDate}
@@ -982,7 +1148,7 @@ const Research = () => {
                                     summary.is_favorite ? "text-amber-500" : "text-muted-foreground hover:text-foreground"
                                   )}
                                   title={summary.is_favorite ? t('Unfavorite') : t('Favorite')}
-                               >
+                                >
                                   <Star className={cn("h-3 w-3", summary.is_favorite && "fill-current")} />
                                 </button>
                                 <button
@@ -996,7 +1162,7 @@ const Research = () => {
                                   }}
                                   className="rounded-full p-1 text-muted-foreground hover:text-destructive transition-colors"
                                   title={t('Delete')}
-                               >
+                                >
                                   <Trash2 className="h-3 w-3" />
                                 </button>
                               </div>
@@ -1044,7 +1210,7 @@ const Research = () => {
                       onClick={() => setSelectedHistoryId(null)}
                       className="rounded-full p-2 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
                       title={t('Close summary')}
-                   >
+                    >
                       <X className="h-4 w-4" />
                     </button>
                   ) : null}
@@ -1055,55 +1221,55 @@ const Research = () => {
                     {summaryError && (
                       <div className="text-sm text-red-500 mb-3">{summaryError}</div>
                     )}
-                  {isGeneratingSummary ? (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
-                      <div className="flex items-center gap-3">
-                        <SummaryThinkingIndicator stage={summaryStage === 'idle' ? 'preparing' : summaryStage} />
-                        <Button
-                          onClick={handleStopSummary}
-                          size="sm"
-                          variant="outline"
-                          className="h-8 w-8 rounded-full p-0 bg-white text-red-600 border-0 hover:bg-red-50 hover:text-red-700"
-                       >
-                          <Square className="h-3.5 w-3.5" />
-                        </Button>
+                    {isGeneratingSummary ? (
+                      <div className="space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="flex items-center gap-3">
+                          <SummaryThinkingIndicator stage={summaryStage === 'idle' ? 'preparing' : summaryStage} />
+                          <Button
+                            onClick={handleStopSummary}
+                            size="sm"
+                            variant="outline"
+                            className="h-8 w-8 rounded-full p-0 bg-white text-red-600 border-0 hover:bg-red-50 hover:text-red-700"
+                          >
+                            <Square className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                        {summaryText ? (
+                          <div className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed prose-p:my-4 prose-ul:my-4 prose-ol:my-4 prose-li:my-3 prose-headings:my-5 prose-p:indent-0 prose-li:indent-0">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]} components={summaryMarkdownComponents}>
+                              {preprocessSummaryText(summaryText)}
+                            </ReactMarkdown>
+                          </div>
+                        ) : null}
                       </div>
-                      {summaryText ? (
-                        <div className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed prose-p:my-4 prose-ul:my-4 prose-ol:my-4 prose-li:my-3 prose-headings:my-5 prose-p:indent-0 prose-li:indent-0">
-                          <ReactMarkdown remarkPlugins={[remarkGfm]} components={summaryMarkdownComponents}>
-                            {preprocessSummaryText(summaryText)}
-                          </ReactMarkdown>
-                        </div>
-                      ) : null}
-                    </div>
-                  ) : selectedHistory ? (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-4">
-                        {t('Generated on {date}', {
-                          date: formatSummaryDate(selectedHistory.created_at, {
-                            weekday: 'long',
-                            month: 'long',
-                            day: 'numeric',
-                            year: 'numeric'
-                          })
-                        })}
-                      </p>
-                      {selectedHistory.summary ? (
-                        <div className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed prose-p:my-4 prose-ul:my-4 prose-ol:my-4 prose-li:my-3 prose-headings:my-5 prose-p:indent-0 prose-li:indent-0">
-                          <ReactMarkdown remarkPlugins={[remarkGfm]} components={summaryMarkdownComponents}>
-                            {preprocessSummaryText(selectedHistory.summary)}
-                          </ReactMarkdown>
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">{t('No content available.')}</p>
-                      )}
-                    </div>
-                  ) : summaryText ? (
-                    <div className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed prose-p:my-4 prose-ul:my-4 prose-ol:my-4 prose-li:my-3 prose-headings:my-5 prose-p:indent-0 prose-li:indent-0">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]} components={summaryMarkdownComponents}>
-                        {preprocessSummaryText(summaryText)}
-                      </ReactMarkdown>
-                    </div>
+                    ) : selectedHistory ? (
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-4">
+                          {t('Generated on {date}', {
+                            date: formatSummaryDate(selectedHistory.created_at, {
+                              weekday: 'long',
+                              month: 'long',
+                              day: 'numeric',
+                              year: 'numeric'
+                            })
+                          })}
+                        </p>
+                        {selectedHistory.summary ? (
+                          <div className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed prose-p:my-4 prose-ul:my-4 prose-ol:my-4 prose-li:my-3 prose-headings:my-5 prose-p:indent-0 prose-li:indent-0">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]} components={summaryMarkdownComponents}>
+                              {preprocessSummaryText(selectedHistory.summary)}
+                            </ReactMarkdown>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">{t('No content available.')}</p>
+                        )}
+                      </div>
+                    ) : summaryText ? (
+                      <div className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed prose-p:my-4 prose-ul:my-4 prose-ol:my-4 prose-li:my-3 prose-headings:my-5 prose-p:indent-0 prose-li:indent-0">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={summaryMarkdownComponents}>
+                          {preprocessSummaryText(summaryText)}
+                        </ReactMarkdown>
+                      </div>
                     ) : (
                       <div className="flex flex-col items-center justify-center text-center min-h-[360px]">
                         <div className="w-full max-w-sm space-y-5">
@@ -1138,7 +1304,7 @@ const Research = () => {
                               size="sm"
                               className="gap-2 rounded-lg px-6 shadow-sm text-foreground border-0 bg-transparent bg-gradient-to-r from-amber-200/70 via-fuchsia-200/60 to-sky-200/70 hover:bg-transparent hover:from-amber-200/80 hover:via-fuchsia-200/70 hover:to-sky-200/80 hover:brightness-100"
                               disabled={totalUnread === 0}
-                           >
+                            >
                               <Sparkles className="h-3.5 w-3.5" />
                               {t('Generate Summary')}
                             </Button>
@@ -1167,7 +1333,7 @@ const Research = () => {
                 <button
                   onClick={handleClearSearch}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-               >
+                >
                   <X className="h-3.5 w-3.5" />
                 </button>
               )}
@@ -1222,8 +1388,8 @@ const Research = () => {
             <div className="space-y-3 mb-6">
               <div className="flex gap-2 sm:gap-2.5 overflow-x-auto pb-1 -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap scrollbar-none">
                 {Object.entries(categoryConfig).map(([key, config]) => {
-                  const count = key === 'all' 
-                    ? sources.length 
+                  const count = key === 'all'
+                    ? sources.length
                     : sources.filter(s => s.category === key).length;
                   const unread = key === 'all'
                     ? totalUnread
@@ -1240,7 +1406,7 @@ const Research = () => {
                           ? key === 'all'
                             ? "bg-foreground text-background shadow-md"
                             : cn(config.bg, config.color, "shadow-sm")
-                        : "text-muted-foreground/70 hover:text-foreground hover:bg-muted/40"
+                          : "text-muted-foreground/70 hover:text-foreground hover:bg-muted/40"
                       )}
                     >
                       {config.icon}
@@ -1276,7 +1442,7 @@ const Research = () => {
                         : "bg-muted/60 text-muted-foreground hover:text-foreground",
                       unreadSourceCount === 0 && "opacity-40 cursor-not-allowed"
                     )}
-                    >
+                  >
                     {t('Unread')}
                     <span
                       className={cn(
@@ -1303,7 +1469,7 @@ const Research = () => {
                           "px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-colors border-0 ring-0 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0",
                           isActive ? config.activeColor : config.bgColor
                         )}
-                     >
+                      >
                         {config.label}
                       </button>
                     );
@@ -1348,13 +1514,13 @@ const Research = () => {
             ) : filteredSources.length === 0 && filteredItems.length === 0 ? (
               <EmptyState
                 icon={LayoutGrid}
-                title={searchQuery 
-                  ? t('No matching results') 
-                  : selectedCategory === 'all' 
-                    ? t('No sources yet') 
+                title={searchQuery
+                  ? t('No matching results')
+                  : selectedCategory === 'all'
+                    ? t('No sources yet')
                     : t('No {category} sources', { category: categoryConfig[selectedCategory]?.label || selectedCategory })
                 }
-                description={searchQuery 
+                description={searchQuery
                   ? t('Try a different search term')
                   : t('Add your favorite information sources to track updates')
                 }
@@ -1403,7 +1569,7 @@ const Research = () => {
                             setSelectedSource(item.source_id);
                           }
                         }}
-                     >
+                      >
                         <div className="flex items-start gap-3">
                           {/* Source Logo */}
                           {itemSource && (
@@ -1487,6 +1653,53 @@ const Research = () => {
         description={confirmDialog.description}
         onConfirm={confirmDialog.onConfirm}
       />
+
+      {/* Change Password Dialog */}
+      <Dialog open={changePasswordDialog} onOpenChange={setChangePasswordDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("Change Password")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">{t("New Password")}</label>
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder={t("Enter new password")}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">{t("Confirm New Password")}</label>
+              <Input
+                type="password"
+                value={confirmNewPassword}
+                onChange={(e) => setConfirmNewPassword(e.target.value)}
+                placeholder={t("Confirm new password")}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setChangePasswordDialog(false);
+                setNewPassword('');
+                setConfirmNewPassword('');
+              }}
+            >
+              {t("Cancel")}
+            </Button>
+            <Button onClick={handleChangePassword} disabled={changingPassword}>
+              {changingPassword ? t("Changing...") : t("Change Password")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Feedback Dialog */}
+      <FeedbackDialog open={feedbackDialog} onOpenChange={setFeedbackDialog} />
     </div>
   );
 };

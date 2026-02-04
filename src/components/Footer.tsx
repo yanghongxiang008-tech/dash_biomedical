@@ -46,8 +46,10 @@ const Footer = ({ className }: FooterProps) => {
           {/* Logo & About */}
           <div className="col-span-2 md:col-span-1 space-y-4">
             <div className="flex items-center gap-2">
-              <img src="/favicon.png" alt="AI/Tech Daily" className="w-6 h-6" />
-              <span className="font-heading text-lg tracking-tight">AI/Tech Daily</span>
+              <div className="w-6 h-6 rounded-md bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-[10px]">
+                AI
+              </div>
+              <span className="font-heading text-lg tracking-tight">Biomedical</span>
             </div>
             {/* About - Hidden */}
           </div>

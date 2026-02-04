@@ -6,9 +6,9 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useI18n } from '@/i18n';
 import LanguageToggle from '@/components/LanguageToggle';
-import { 
-  Building2, 
-  LineChart, 
+import {
+  Building2,
+  LineChart,
   Briefcase,
   Link2,
   Save,
@@ -16,8 +16,11 @@ import {
   Loader2,
   ArrowLeft,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  BookOpen
 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import Footer from '@/components/Footer';
 import PageSkeleton from '@/components/PageSkeleton';
 import PageLayout from '@/components/PageLayout';
@@ -31,27 +34,33 @@ const Settings = () => {
   const [displayName, setDisplayName] = useState('');
   const [identity, setIdentity] = useState<string | null>(null);
   const [notionApiKey, setNotionApiKey] = useState('');
+  const [showResearchTab, setShowResearchTab] = useState(() => {
+    return localStorage.getItem('showResearchTab') === 'true';
+  });
+  const [showCortexTab, setShowCortexTab] = useState(() => {
+    return localStorage.getItem('showCortexTab') === 'true';
+  });
   const [hasChanges, setHasChanges] = useState(false);
   const [notionStatus, setNotionStatus] = useState<'idle' | 'checking' | 'valid' | 'invalid'>('idle');
   const { toast } = useToast();
   const identityOptions = [
-    { 
-      id: 'private_equity', 
-      label: t('Private Equity'), 
+    {
+      id: 'private_equity',
+      label: t('Private Equity'),
       description: t('Focus on private market investments'),
-      icon: Building2 
+      icon: Building2
     },
-    { 
-      id: 'public_equity', 
-      label: t('Public Equity'), 
+    {
+      id: 'public_equity',
+      label: t('Public Equity'),
       description: t('Focus on public market investments'),
-      icon: LineChart 
+      icon: LineChart
     },
-    { 
-      id: 'both', 
-      label: t('Both'), 
+    {
+      id: 'both',
+      label: t('Both'),
       description: t('Work across private and public markets'),
-      icon: Briefcase 
+      icon: Briefcase
     },
   ];
 
@@ -82,7 +91,7 @@ const Settings = () => {
       setDisplayName(data.display_name || '');
       setIdentity(data.identity || null);
       setNotionApiKey(data.notion_api_key || '');
-      
+
       // Check Notion connection if key exists
       if (data.notion_api_key) {
         checkNotionConnection(data.notion_api_key);
@@ -100,7 +109,7 @@ const Settings = () => {
       setNotionStatus('idle');
       return;
     }
-    
+
     setNotionStatus('checking');
     try {
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/test-notion`, {
@@ -111,9 +120,9 @@ const Settings = () => {
         },
         body: JSON.stringify({ apiKey }),
       });
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         setNotionStatus('valid');
       } else {
@@ -139,7 +148,7 @@ const Settings = () => {
 
   const handleSave = async () => {
     if (!userId) return;
-    
+
     setSaving(true);
     try {
       const { error } = await supabase
@@ -158,6 +167,11 @@ const Settings = () => {
         description: t('Settings saved'),
       });
       setHasChanges(false);
+
+      // Redirect to main page after showing success toast
+      setTimeout(() => {
+        navigate('/');
+      }, 500);
     } catch (error: any) {
       toast({
         title: t('Error'),
@@ -226,17 +240,15 @@ const Settings = () => {
                     <button
                       key={option.id}
                       onClick={() => { setIdentity(option.id); setHasChanges(true); }}
-                      className={`relative w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200 text-left group ${
-                        identity === option.id
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border/50 hover:border-border hover:bg-muted/30'
-                      }`}
+                      className={`relative w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200 text-left group ${identity === option.id
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border/50 hover:border-border hover:bg-muted/30'
+                        }`}
                     >
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
-                        identity === option.id
-                          ? 'bg-primary/10 text-primary'
-                          : 'bg-muted text-muted-foreground group-hover:text-foreground'
-                      }`}>
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${identity === option.id
+                        ? 'bg-primary/10 text-primary'
+                        : 'bg-muted text-muted-foreground group-hover:text-foreground'
+                        }`}>
                         <Icon className="w-5 h-5" />
                       </div>
                       <div className="flex-1">
@@ -270,8 +282,8 @@ const Settings = () => {
                     placeholder="ntn_... or secret_..."
                     className="max-w-sm font-mono text-sm"
                   />
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={handleCheckNotion}
                     disabled={!notionApiKey || notionStatus === 'checking'}
                   >
@@ -282,7 +294,7 @@ const Settings = () => {
                     )}
                   </Button>
                 </div>
-                
+
                 {/* Connection Status */}
                 {notionStatus === 'valid' && (
                   <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
@@ -296,12 +308,12 @@ const Settings = () => {
                     <span>{t('Connection failed - please check your API key')}</span>
                   </div>
                 )}
-                
+
                 <p className="text-xs text-muted-foreground">
                   {t('Get your token from')}{' '}
-                  <a 
-                    href="https://www.notion.so/my-integrations" 
-                    target="_blank" 
+                  <a
+                    href="https://www.notion.so/my-integrations"
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary hover:underline"
                   >
@@ -311,10 +323,66 @@ const Settings = () => {
               </div>
             </div>
 
+            {/* Display Settings */}
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium mb-1 flex items-center gap-2">
+                  <BookOpen className="w-4 h-4" />
+                  {t('Display Settings')}
+                </h3>
+                <p className="text-xs text-muted-foreground">{t('Customize which tabs appear in navigation')}</p>
+              </div>
+              <div className="flex flex-col gap-4 p-4 rounded-xl border border-border/50 bg-muted/20">
+                {/* Research Tab Toggle */}
+                <div className="flex items-center justify-between pb-4 border-b border-border/10">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="research-toggle" className="text-sm font-medium cursor-pointer">
+                      {t('Show Research Tab')}
+                    </Label>
+                    <p className="text-[11px] text-muted-foreground">
+                      {t('Enable or disable the Research tab in the main navigation bar')}
+                    </p>
+                  </div>
+                  <Switch
+                    id="research-toggle"
+                    checked={showResearchTab}
+                    onCheckedChange={(checked) => {
+                      setShowResearchTab(checked);
+                      localStorage.setItem('showResearchTab', checked.toString());
+                      setHasChanges(true); // Enable Save button
+                      window.dispatchEvent(new Event('toggle-navigation-tabs'));
+                    }}
+                  />
+                </div>
+
+                {/* Cortex Tab Toggle */}
+                <div className="flex items-center justify-between pt-2">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="cortex-toggle" className="text-sm font-medium cursor-pointer">
+                      {t('Show Cortex Tab')}
+                    </Label>
+                    <p className="text-[11px] text-muted-foreground">
+                      {t('Enable or disable the Cortex tab in the main navigation bar')}
+                    </p>
+                  </div>
+                  <Switch
+                    id="cortex-toggle"
+                    checked={showCortexTab}
+                    onCheckedChange={(checked) => {
+                      setShowCortexTab(checked);
+                      localStorage.setItem('showCortexTab', checked.toString());
+                      setHasChanges(true); // Enable Save button
+                      window.dispatchEvent(new Event('toggle-navigation-tabs'));
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Save Button */}
             <div className="pt-6 border-t border-border">
-              <Button 
-                onClick={handleSave} 
+              <Button
+                onClick={handleSave}
                 disabled={!hasChanges || saving}
                 className="gap-2"
               >

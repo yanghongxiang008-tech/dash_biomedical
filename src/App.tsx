@@ -14,6 +14,8 @@ const Auth = lazy(() => import("./pages/Auth"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Research = lazy(() => import("./pages/Research"));
+const Settings = lazy(() => import("./pages/Settings"));
+const GlobalSummary = lazy(() => import("./pages/GlobalSummary"));
 
 // Preload critical pages in background for instant navigation
 const preloadPages = () => {
@@ -65,6 +67,8 @@ const AppRoutes = () => {
           <Route path="/auth" element={<Auth />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/research" element={<Research />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/summary" element={<GlobalSummary />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>

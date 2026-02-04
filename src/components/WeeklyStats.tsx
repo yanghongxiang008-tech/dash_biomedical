@@ -166,7 +166,7 @@ const WeeklyStats = ({ stocks, groups }: WeeklyStatsProps) => {
     setLoadingProgress(10);
     setLoadingStatus('Preparing weekly data...');
     try {
-      const allSymbols = Array.from(new Set([...stocks.map(s => s.symbol), 'QQQ', 'IWM']));
+      const allSymbols = Array.from(new Set(stocks.map(s => s.symbol)));
       const dateStr = format(weekEndDate, 'yyyy-MM-dd');
 
       setLoadingProgress(35);
@@ -482,25 +482,7 @@ const WeeklyStats = ({ stocks, groups }: WeeklyStatsProps) => {
       };
     });
 
-    // Add QQQ and IWM
-    if (weeklyData['QQQ']) {
-      const value = getChangeByTimeframe(weeklyData['QQQ'], chartTimeframe);
-      chartData.push({
-        name: 'QQQ',
-        value,
-        displaySymbol: 'QQQ',
-        fill: value >= 0 ? '#22c55e' : '#ef4444'
-      });
-    }
-    if (weeklyData['IWM']) {
-      const value = getChangeByTimeframe(weeklyData['IWM'], chartTimeframe);
-      chartData.push({
-        name: 'IWM',
-        value,
-        displaySymbol: 'IWM',
-        fill: value >= 0 ? '#22c55e' : '#ef4444'
-      });
-    }
+
 
     return chartData.sort((a, b) => b.value - a.value);
   };

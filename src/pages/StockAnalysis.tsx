@@ -163,7 +163,7 @@ const StockAnalysis = () => {
     if (stateTab && ['ai', 'home', 'weekly', 'chat', 'admin'].includes(stateTab)) {
       return stateTab as 'ai' | 'home' | 'weekly' | 'chat' | 'admin';
     }
-    return 'ai';
+    return 'home';
   });
   const [syncingToNotion, setSyncingToNotion] = useState(false);
   const [showSyncConfirm, setShowSyncConfirm] = useState(false);
@@ -507,8 +507,7 @@ const StockAnalysis = () => {
 
     try {
       // Deduplicate symbols - a stock can exist in multiple groups
-      // Also add QQQ and IWM for market indices display
-      const allSymbols = Array.from(new Set([...stocks.map(s => s.symbol), 'QQQ', 'IWM']));
+      const allSymbols = Array.from(new Set(stocks.map(s => s.symbol)));
       const currentDate = format(selectedDate, 'yyyy-MM-dd');
       const today = format(new Date(), 'yyyy-MM-dd');
       const isToday = currentDate === today;
@@ -1566,20 +1565,22 @@ const StockAnalysis = () => {
                     {loading ? t('Loading...') : t('Refresh')}
                   </Button>
 
-                  <Button
-                    onClick={() => setIsEditMode(!isEditMode)}
-                    size="sm"
-                    variant="outline"
-                    className={cn(
-                      "text-xs flex-shrink-0 transition-all duration-200 ease-out",
-                      isEditMode
-                        ? "bg-muted hover:bg-muted/80"
-                        : "bg-red-600 hover:bg-red-700 text-white border-red-600 hover:border-red-700 hover:shadow-sm"
-                    )}
-                  >
-                    <Edit2 className="h-3 w-3 sm:mr-1" />
-                    <span className="hidden sm:inline">{isEditMode ? t('Exit Edit') : t('Edit')}</span>
-                  </Button>
+                  {isAdmin && (
+                    <Button
+                      onClick={() => setIsEditMode(!isEditMode)}
+                      size="sm"
+                      variant="outline"
+                      className={cn(
+                        "text-xs flex-shrink-0 transition-all duration-200 ease-out",
+                        isEditMode
+                          ? "bg-muted hover:bg-muted/80"
+                          : "bg-red-600 hover:bg-red-700 text-white border-red-600 hover:border-red-700 hover:shadow-sm"
+                      )}
+                    >
+                      <Edit2 className="h-3 w-3 sm:mr-1" />
+                      <span className="hidden sm:inline">{isEditMode ? t('Exit Edit') : t('Edit')}</span>
+                    </Button>
+                  )}
                 </>
               )}
             />
@@ -1705,25 +1706,7 @@ const StockAnalysis = () => {
                               };
                             });
 
-                            // Add QQQ if data exists
-                            if (stockData['QQQ']) {
-                              chartData.push({
-                                name: 'QQQ',
-                                value: stockData['QQQ'].changePercent,
-                                displaySymbol: 'QQQ',
-                                fill: stockData['QQQ'].changePercent >= 0 ? '#22c55e' : '#ef4444'
-                              });
-                            }
 
-                            // Add IWM if data exists
-                            if (stockData['IWM']) {
-                              chartData.push({
-                                name: 'IWM',
-                                value: stockData['IWM'].changePercent,
-                                displaySymbol: 'IWM',
-                                fill: stockData['IWM'].changePercent >= 0 ? '#22c55e' : '#ef4444'
-                              });
-                            }
 
                             // Sort by changePercent descending (highest to lowest)
                             return chartData.sort((a, b) => b.value - a.value);
