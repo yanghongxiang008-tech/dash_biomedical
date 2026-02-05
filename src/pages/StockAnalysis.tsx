@@ -1412,7 +1412,7 @@ const StockAnalysis = () => {
 
   return (
     <div className="min-h-screen bg-background animate-fade-in">
-      {/* Page Header with AI/Tech Daily brand and Market Switcher */}
+      {/* Page Header with biomedical brand and Market Switcher */}
       <PageHeader />
 
       {/* Navigation */}

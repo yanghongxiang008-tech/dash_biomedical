@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 本项目的所有重大变更都将记录在此文件中。
 
+## [2026-02-05 10:50]
+
+### Changed / 改进与优化
+- **Rebranding / 品牌更名**: 
+  - Updated website title, description, and internal branding from "AI/Tech Daily" to "biomedical".
+  - 将网站标题、描述以及内部品牌名称从“AI/Tech Daily”统一更名为“biomedical”。
+  - Updated logo text to "BIO" and header to "biomedical".
+  - 将 Logo 文字更新为“BIO”，标题更新为“biomedical”。
+
 ## [2026-02-04 14:40]
 
 ### Added / 新增功能

@@ -38,13 +38,13 @@ Deno.serve(async (req) => {
 
     // Send invitation email
     const { error: emailError } = await resend.emails.send({
-      from: 'AI/Tech Daily <onboarding@resend.dev>',
+      from: 'biomedical <onboarding@resend.dev>',
       to: [email],
-      subject: 'You\'re invited to AI/Tech Daily',
+      subject: 'You\'re invited to biomedical',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #333;">Welcome to AI/Tech Daily!</h1>
-          <p>You've been invited to join AI/Tech Daily.</p>
+          <h1 style="color: #333;">Welcome to biomedical!</h1>
+          <p>You've been invited to join biomedical.</p>
           <p>To complete your registration, you'll need an invite code.</p>
           <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <p style="margin: 0; font-size: 16px; color: #333; font-weight: 500;">
@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
       JSON.stringify({ error: errorMessage }),
-      { 
+      {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
