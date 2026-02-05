@@ -38,8 +38,7 @@ const Navigation = ({ activeTab = 'home', onTabChange, isAdmin = false }: Naviga
 
   // Determine the current effective active tab
   const isResearchPage = location.pathname === '/research';
-  const isSummaryPage = location.pathname === '/summary';
-  const currentActiveTab = isResearchPage ? 'research' : isSummaryPage ? 'summary' : activeTab;
+  const currentActiveTab = isResearchPage ? 'research' : activeTab;
 
   const showChat = false;
   const tabs = [
@@ -57,9 +56,9 @@ const Navigation = ({ activeTab = 'home', onTabChange, isAdmin = false }: Naviga
     if (tabId === 'research') {
       navigate('/research');
     } else if (tabId === 'summary') {
-      navigate('/summary');
+      window.open('http://118.193.47.247:8004/', '_blank');
     } else {
-      if (isResearchPage || isSummaryPage) {
+      if (isResearchPage) {
         // Navigate back to main page with the selected tab
         navigate('/', { state: { activeTab: tabId } });
       } else {
