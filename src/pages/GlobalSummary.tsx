@@ -19,7 +19,7 @@ const GlobalSummary = () => {
             <main className="flex-1 w-full max-w-[1600px] mx-auto px-4 md:px-6 lg:px-8 pb-8">
                 <div className="w-full h-[calc(100vh-180px)] rounded-2xl border border-border/50 overflow-hidden bg-muted/20 shadow-inner group transition-all duration-300">
                     <iframe
-                        src="http://118.193.47.247:8004/"
+                        src="https://aimedical.dash-management.com:8004/"
                         className="w-full h-full border-0"
                         title="Global Summary Dashboard"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -33,7 +33,7 @@ const GlobalSummary = () => {
                         {t("If the summary doesn't load, it may be due to browser security settings for HTTP content.")}
                     </p>
                     <a
-                        href="http://118.193.47.247:8004/"
+                        href="https://aimedical.dash-management.com:8004/"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-xs text-primary hover:underline mt-1 inline-block"
