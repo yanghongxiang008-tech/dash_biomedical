@@ -19,8 +19,8 @@ All notable changes to this project will be documented in this file.
   - Integrated user avatar, settings, change password, and logout functionality for consistency.
   - 在 Research 页面整合了用户头像、设置、修改密码和退出登录功能，确保全站体验一致。
 - **Global Summary Tab / 全局汇总页**: 
-  - Added a new "Summary" button in the navigation bar that opens an external dashboard in a new tab (changed from internal embed to avoid mixed content/security issues), featuring a custom vibrant AI-style gradient.
-  - 在导航栏新增了“Summary”按钮，点击后将在新标签页打开外部看板（由于浏览器安全及混合内容限制，从内部嵌入改为外跳方式），并配有专属的 AIGC 幻彩风格渐变样式。
+  - Re-embedded the external dashboard via iframe within the application for a seamless experience (while providing a fallback link for security/mixed content issues).
+  - 将外部看板重新以 iframe 方式嵌入到应用内部以提供无缝体验（同时保留了针对安全/混合内容限制的跳转链接）。
 - **Cortex Tab Toggle / Cortex 选项卡开关**: 
   - Added a new display setting to toggle visibility of the Cortex tab.
   - 在设置中新增了 Cortex 选项卡的显示/隐藏切换开关。

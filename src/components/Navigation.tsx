@@ -38,7 +38,8 @@ const Navigation = ({ activeTab = 'home', onTabChange, isAdmin = false }: Naviga
 
   // Determine the current effective active tab
   const isResearchPage = location.pathname === '/research';
-  const currentActiveTab = isResearchPage ? 'research' : activeTab;
+  const isSummaryPage = location.pathname === '/summary';
+  const currentActiveTab = isResearchPage ? 'research' : isSummaryPage ? 'summary' : activeTab;
 
   const showChat = false;
   const tabs = [
@@ -56,9 +57,9 @@ const Navigation = ({ activeTab = 'home', onTabChange, isAdmin = false }: Naviga
     if (tabId === 'research') {
       navigate('/research');
     } else if (tabId === 'summary') {
-      window.open('http://118.193.47.247:8004/', '_blank');
+      navigate('/summary');
     } else {
-      if (isResearchPage) {
+      if (isResearchPage || isSummaryPage) {
         // Navigate back to main page with the selected tab
         navigate('/', { state: { activeTab: tabId } });
       } else {
@@ -89,7 +90,7 @@ const Navigation = ({ activeTab = 'home', onTabChange, isAdmin = false }: Naviga
                 isActive
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : tab.id === 'summary'
-                    ? "bg-gradient-to-r from-amber-200/70 via-fuchsia-200/60 to-sky-200/70 text-foreground/90 hover:from-amber-200/80 hover:via-fuchsia-200/70 hover:to-sky-200/80 opactiy-90"
+                    ? "bg-gradient-to-r from-amber-200/70 via-fuchsia-200/60 to-sky-200/70 text-foreground/90 hover:from-amber-200/80 hover:via-fuchsia-200/70 hover:to-sky-200/80 opacity-90"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50 active:scale-95"
               )}
             >
